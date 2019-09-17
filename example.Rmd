@@ -1,0 +1,59 @@
+---
+title: "classex"
+author: "Wurongyan Zhang"
+date: "9/17/2019"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(tidyverse)
+```
+
+```{r}
+#reads in data set
+getwd()
+litters_data = read_csv(file = "./data_import_examples/FAS_litters.csv")
+```
+
+```{r}
+litters_data = janitor::clean_names(litters_data)
+names(litters_data)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
