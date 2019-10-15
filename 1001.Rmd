@@ -1,0 +1,230 @@
+---
+title: '1001'
+author: "Wurongyan Zhang"
+date: "10/1/2019"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+devtools::install_github("thomasp85/patchwork")
+library(tidyverse)
+```
+
+```{r}
+library(ggridges)
+library(patchwork)
+```
+
+```{r}
+weather_df = 
+  rnoaa::meteo_pull_monitors(
+    c("USW00094728", "USC00519397", "USS0023B17S"),
+    var = c("PRCP", "TMIN", "TMAX"), 
+    date_min = "2017-01-01",
+    date_max = "2017-12-31") %>%
+  mutate(
+    name = recode(id, USW00094728 = "CentralPark_NY", 
+                      USC00519397 = "Waikiki_HA",
+                      USS0023B17S = "Waterhole_WA"),
+    tmin = tmin / 10,
+    tmax = tmax / 10) %>%
+  select(name, id, everything())
+```
+
+```{r}
+weather_df %>% 
+  ggplot(aes(x = tmin, y = tmax)) + 
+  geom_point(aes(color = name), alpha = .5) + 
+  labs(
+    title = "Temperature plot",
+    x = "Minimum daily temperature (C)",
+    y = "Maxiumum daily temperature (C)",
+    caption = "Data from the rnoaa package") + 
+  scale_x_continuous(
+    breaks = c(-15, 0, 15), 
+    labels = c("-15º C", "0", "15"))
+```
+
+```{r}
+weather_df %>% 
+  ggplot(aes(x = tmin, y = tmax)) + 
+  geom_point(aes(color = name), alpha = .5) + 
+  labs(
+    title = "Temperature plot",
+    x = "Minimum daily temperature (C)",
+    y = "Maxiumum daily temperature (C)",
+    caption = "Data from the rnoaa package") + 
+  scale_x_continuous(
+    breaks = c(-15, 0, 15), 
+    labels = c("-15ºC", "0", "15"),
+    limits = c(-20, 30)) + 
+  scale_y_continuous(
+    trans = "sqrt", 
+    position = "right")
+
+#position = lable is in right or left
+```
+
+```{r}
+weather_df %>% 
+  ggplot(aes(x = tmin, y = tmax)) + 
+  geom_point(aes(color = name), alpha = .5) + 
+  labs(
+    title = "Temperature plot",
+    x = "Minimum daily temperature (C)",
+    y = "Maxiumum daily temperature (C)",
+    caption = "Data from the rnoaa package") + 
+  scale_x_continuous(
+    breaks = c(-15, 0, 15), 
+    labels = c("-15ºC", "0", "15"),
+    limits = c(-20, 30)) + 
+  scale_y_sqrt(
+    )
+```
+
+```{r}
+weather_df %>% 
+  ggplot(aes(x = tmin, y = tmax)) + 
+  geom_point(aes(color = name), alpha = .5) + 
+  labs(
+    title = "Temperature plot",
+    x = "Minimum daily temperature (C)",
+    y = "Maxiumum daily temperature (C)",
+    caption = "Data from the rnoaa package") + 
+  scale_color_hue(name = "Location", h = c(200, 300))
+#hue= color
+```
+
+```{r}
+ggp_temp_plot = 
+  weather_df %>% 
+  ggplot(aes(x = tmin, y = tmax)) + 
+  geom_point(aes(color = name), alpha = .5) + 
+  labs(
+    title = "Temperature plot",
+    x = "Minimum daily temperature (C)",
+    y = "Maxiumum daily temperature (C)",
+    caption = "Data from the rnoaa package"
+  ) + 
+  viridis::scale_color_viridis(
+    name = "Location", 
+    discrete = TRUE
+  )
+#We used discrete = TRUE because the color aesthetic is mapped to a discrete variable
+ggp_temp_plot
+```
+
+```{r}
+ggp_temp_plot + 
+  theme_bw() +
+  theme(legend.position = "bottom")
+```
+
+```{r}
+ggp_temp_plot + 
+  theme_classic() + 
+  theme(legend.position = "bottom")
+#ggthemes::theme_excel() = grey background
+```
+
+```{r}
+ggplot(weather_df, aes(x=date, y=tmax, color=name)) +
+  geom_smooth(se = FALSE) +
+  geom_point(aes(size = prcp), alpha = .75) +
+  labs(
+    title = "temperature plot",
+    x= "date",
+    y = "max daily temp",
+    caption = "data from rnoaa package"
+  ) + viridis::scale_color_viridis(discrete = TRUE) + 
+  theme_minimal() + 
+  theme(legend.position = "bottom")
+  
+```
+
+```{r}
+central_park = weather_df %>% 
+  filter(name == "CentralPark_NY")
+waikiki = weather_df %>% 
+  filter(name == "Waikiki_HA")
+waterhole = weather_df %>% 
+  filter(name == "Waterhole_WA")
+```
+
+```{r}
+ggplot(data = waikiki, aes(x=date, y=tmax, color = name))+
+  geom_point() +
+  geom_line(data = central_park)
+```
+
+# patchwork
+```{r}
+tmax_tmin_p = 
+  weather_df %>% 
+  ggplot(aes(x = tmax, y = tmin, color = name)) + 
+  geom_point(alpha = .5) +
+  theme(legend.position = "none")
+
+prcp_dens_p = 
+  weather_df %>% 
+  filter(prcp > 0) %>% 
+  ggplot(aes(x = prcp, fill = name)) + 
+  geom_density(alpha = .5) + 
+  theme(legend.position = "none")
+
+tmax_date_p = 
+  weather_df %>% 
+  ggplot(aes(x = date, y = tmax, color = name)) + 
+  geom_point(alpha = .5) +
+  geom_smooth(se = FALSE) + 
+  theme(legend.position = "bottom")
+
+(tmax_tmin_p + prcp_dens_p) / tmax_date_p
+```
+
+# data manipulation
+
+```{r}
+pulse_data = 
+  haven::read_sas("./data_import_examples/public_pulse_data.sas7bdat") %>%
+  janitor::clean_names() %>%
+  pivot_longer(
+    bdi_score_bl:bdi_score_12m,
+    names_to = "visit", 
+    names_prefix = "bdi_score_",
+    values_to = "bdi") %>%
+  select(id, visit, everything()) %>%
+  mutate(visit = recode(visit, "bl" = "00m"),
+         visit = factor(visit, levels = str_c(c("00", "01", "06", "12"), "m"))) %>%
+  arrange(id, visit)
+
+ggplot(pulse_data, aes(x = visit, y = bdi, color = visit)) + 
+  geom_boxplot()
+```
+
+You can change the order level of a factor variable to your specified preference using forcats::fct_relevel or according to the value of another variable using forcats::fct_reorder
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

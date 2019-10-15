@@ -1,0 +1,114 @@
+---
+title: '1008'
+author: "Wurongyan Zhang"
+date: "10/8/2019"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(tidyverse)
+library(p8105.datasets)
+
+data(nyc_airbnb)
+```
+```{r}
+str(nyc_airbnb)
+```
+```{r}
+nyc_airbnb %>% 
+  count(room_type) 
+nyc_airbnb %>% 
+  count(neighbourhood_group)
+```
+
+```{r}
+nyc_airbnb %>% 
+  group_by(neighbourhood_group) %>% 
+  summarise(mean=mean(price)) %>% 
+  arrange(desc(mean))
+
+```
+```{r}
+nyc_airbnb %>% 
+  group_by(host_name) %>% 
+  summarise() %>% 
+  arrange(desc(n))  
+ 
+  
+```
+
+
+```{r}
+nyc_airbnb %>% 
+  mutate(stars=review_scores_location/2)
+```
+```{r}
+nyc_airbnb %>% 
+  mutate(neighbourhood=as.factor(neighbourhood),borough=neighbourhood_group) %>% 
+  filter(borough=="Manhattan") %>% 
+  mutate(neighbourhood=fct_reorder(neighbourhood, price, na.rm=TRUE)) %>% 
+  ggplot(aes(x=price, y=neighbourhood)) + 
+  geom_violin()
+```
+
+```{r}
+nyc_airbnb %>% 
+  group_by(neighbourhood_group,room_type) %>% 
+  summarise(med_price=median(price, na.rm = TRUE)) %>% 
+  pivot_wider(
+    names_from = room_type,
+    values_from = med_price
+  )
+```
+
+```{r}
+nyc_airbnb %>% 
+  group_by(neighbourhood_group,room_type) %>% 
+  summarise(med_price=median(price, na.rm = TRUE), med_review=mean(review_scores_location,na.rm = TRUE)) %>% 
+  ggplot(aes(x=med_review, y= med_price))+
+  geom_point()+
+  facet_grid(~neighbourhood_group)
+  
+```
+
+```{r}
+# quick glance on rating vs price
+test_data <- nyc_airbnb %>%
+ drop_na(review_scores_location) %>%
+ select(review_scores_location, neighbourhood_group, neighbourhood, review_scores_location, price, room_type) %>%
+ mutate(
+   room_type = as.factor(room_type)
+ ) %>%
+ group_by(review_scores_location) %>%
+ ggplot(aes(x = review_scores_location, y = price, color = room_type)) +
+ geom_point(alpha = 0.4) +
+ facet_grid(room_type~neighbourhood_group)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
